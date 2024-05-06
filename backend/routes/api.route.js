@@ -7,7 +7,7 @@ require("dotenv").config();
 
 router.route("/evaluate").post(async (req, res) => {
     let responseSent = false;
-    const prompt = req.body.prompt;
+    const { prompt } = req.body;
     const message =
         "Read the following symptoms and provide me with several possible illnesses/conditions that could be the cause behind this. Briefly explain what the illness/condition is. If the symptoms are unlikely to be indicative of any illness, let me know. The symptoms are as follows: " +
         prompt.join(", ");
@@ -41,8 +41,7 @@ router.route("/evaluate").post(async (req, res) => {
 
 router.route("/hospitals").post(async (req, res) => {
     let responseSent = false;
-    const state = req.body.state;
-    const zipCode = req.body.zipCode;
+    const { state, zipCode } = req.body;
 
     try {
         const response = await fetch(`http://www.communitybenefitinsight.org/api/get_hospitals.php?state=${state}`);

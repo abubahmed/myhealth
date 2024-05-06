@@ -3,9 +3,7 @@ let User = require("../models/user.model");
 
 router.route("/add").post(async (req, res) => {
     let responseSent = false;
-    const username = req.body.username;
-    const password = req.body.password;
-    const type = req.body.type;
+    const { username, password, type } = req.body;
 
     try {
         const existingUser = await User.findOne({ username });
@@ -38,9 +36,7 @@ router.route("/add").post(async (req, res) => {
 
 router.route("/login").post(async (req, res) => {
     let responseSent = false;
-    const username = req.body.username;
-    const password = req.body.password;
-    const type = req.body.type;
+    const { username, password, type } = req.body;
 
     try {
         const user = await User.findOne({ username });

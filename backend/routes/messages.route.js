@@ -4,7 +4,7 @@ let User = require("../models/user.model");
 
 router.route("/get").post(async (req, res) => {
     let responseSent = false;
-    const username = req.body.username;
+    const { username } = req.body;
 
     try {
         const messages = await Message.find({
@@ -32,11 +32,7 @@ router.route("/get").post(async (req, res) => {
 
 router.route("/send").post(async (req, res) => {
     let responseSent = false;
-    const sender = req.body.sender;
-    const receiver = req.body.receiver;
-    const message = req.body.message;
-    const subject = req.body.subject;
-    const date = req.body.date;
+    const { sender, receiver, message, subject, date } = req.body;
 
     try {
         const senderUser = await User.findOne({ username: receiver });

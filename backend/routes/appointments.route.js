@@ -4,7 +4,7 @@ let User = require("../models/user.model");
 
 router.route("/get").post(async (req, res) => {
     let responseSent = false;
-    const username = req.body.username;
+    const { username } = req.body;
 
     try {
         const appointments = await Appointment.find({ username: username });
@@ -30,10 +30,7 @@ router.route("/get").post(async (req, res) => {
 
 router.route("/add").post(async (req, res) => {
     let responseSent = false;
-    const doctor = req.body.doctor;
-    const description = req.body.description;
-    const date = req.body.date;
-    const username = req.body.username;
+    const { username, doctor, description, date } = req.body;
 
     try {
         const doctorUser = await User.findOne({ username: doctor });
