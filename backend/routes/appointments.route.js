@@ -1,13 +1,14 @@
 const router = require("express").Router();
 let Appointment = require("../models/appointment.model");
 let User = require("../models/user.model");
+const verifyToken = require("../util/verifyToken");
 
-router.route("/get").post(async (req, res) => {
+router.route("/get").post(verifyToken, async (req, res) => {
     let responseSent = false;
-    const { username } = req.body;
+    const username = req.user?.username;
 
     try {
-        const appointments = await Appointment.find({ username: username });
+        const appointments = await Appointment.find({ username });
         if (!responseSent) {
             responseSent = true;
             return res.status(200).json({
@@ -28,9 +29,10 @@ router.route("/get").post(async (req, res) => {
     }
 });
 
-router.route("/add").post(async (req, res) => {
+router.route("/add").post(verifyToken, async (req, res) => {
     let responseSent = false;
-    const { username, doctor, description, date } = req.body;
+    const { doctor, description, date } = req.body;
+    const username = req.user?.username;
 
     try {
         const doctorUser = await User.findOne({ username: doctor });

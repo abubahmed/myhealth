@@ -3,9 +3,10 @@ const OpenAI = require("openai");
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_KEY,
 });
+const verifyToken = require("../util/verifyToken");
 require("dotenv").config();
 
-router.route("/evaluate").post(async (req, res) => {
+router.route("/evaluate").post(verifyToken, async (req, res) => {
     let responseSent = false;
     const { prompt } = req.body;
     const message =
@@ -39,7 +40,7 @@ router.route("/evaluate").post(async (req, res) => {
     }
 });
 
-router.route("/hospitals").post(async (req, res) => {
+router.route("/hospitals").post(verifyToken, async (req, res) => {
     let responseSent = false;
     const { state, zipCode } = req.body;
 

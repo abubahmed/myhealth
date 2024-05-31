@@ -1,101 +1,133 @@
-import { View, ScrollView, SafeAreaView, Text, TouchableOpacity, ToastAndroid, TextInput } from "react-native";
+import {
+  View,
+  ScrollView,
+  SafeAreaView,
+  Text,
+  TouchableOpacity,
+  ToastAndroid,
+  TextInput,
+} from "react-native";
 import { Stack } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import styles from "../../styles/styles";
 import states from "../../util/states";
+import checkTokenExpiration from "../../util/checkToken";
+import { useRouter } from "expo-router";
 
 const Hospitals = () => {
-    const [state, setState] = useState("");
-    const [zipCode, setZipCode] = useState("");
-    const [hospitals, setHospitals] = useState([]);
+  const router = useRouter();
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [hospitals, setHospitals] = useState([]);
 
-    const attemptGetHospitals = async () => {
-        if (state === "") {
-            ToastAndroid.show("Please enter a valid state", ToastAndroid.SHORT);
-            return;
-        }
-        try {
-            const lowerCaseState = state.toLowerCase().trim();
-            if (!states[lowerCaseState]) {
-                return;
-            }
-            const response = await axios.post(
-                "http://localhost:5000/others/hospitals",
-                {
-                    state: states[lowerCaseState],
-                    zipCode: zipCode,
-                },
-                {
-                    headers: {
-                        "Content-type": "application/json; charset=UTF-8",
-                    },
-                }
-            );
-            const data = response.data.data;
-            setHospitals(data);
-            if (data.length > 0) {
-                ToastAndroid.show("Successfully retrieved hospitals", ToastAndroid.SHORT);
-                setState("");
-                setZipCode("");
-            } else {
-                ToastAndroid.show("No hospitals found", ToastAndroid.SHORT);
-            }
-        } catch (error) {
-            console.log(error);
-        }
+  useEffect(() => {
+    const checkToken = async () => {
+      const tokenValid = await checkTokenExpiration();
+      if (!tokenValid) {
+        router.replace("/");
+      }
     };
+    checkToken();
+  }, []);
 
-    return (
-        <SafeAreaView style={styles.screenContainer}>
-            <Stack.Screen
-                options={{
-                    headerShadowVisible: false,
-                    headerTitle: "",
-                }}
-            />
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                style={{ flex: 1 }}
-                contentContainerStyle={{ justifyContent: "center", alignItems: "center" }}>
-                <TextInput placeholder="State" value={state} onChangeText={setState} style={styles.defaultInput} />
-                <TextInput
-                    placeholder="Zip Code"
-                    value={zipCode}
-                    onChangeText={setZipCode}
-                    style={[
-                        styles.defaultInput,
-                        {
-                            marginVertical: 12,
-                        },
-                    ]}
-                />
-                <TouchableOpacity style={styles.defaultBtn} onPress={attemptGetHospitals}>
-                    <Text
-                        style={{
-                            fontSize: 18,
-                        }}>
-                        Search for Hospitals
-                    </Text>
-                </TouchableOpacity>
-                <View style={[styles.hospitalContainer]}>
-                    <ScrollView>
-                        {hospitals.map((hospital, index) => {
-                            return (
-                                <View key={index} style={styles.resultContainer}>
-                                    <Text style={{ fontSize: 18 }}>{hospital.name}</Text>
-                                    <Text style={{ fontSize: 16 }}>{hospital.street_address}</Text>
-                                    <Text style={{ fontSize: 16 }}>
-                                        {hospital.zip_code} {hospital.city}, {hospital.state}
-                                    </Text>
-                                </View>
-                            );
-                        })}
-                    </ScrollView>
+  const attemptGetHospitals = async () => {
+    if (state === "") {
+      ToastAndroid.show("Please enter a valid state", ToastAndroid.SHORT);
+      return;
+    }
+    try {
+      const tokenValid = await checkTokenExpiration();
+      if (!tokenValid) {
+        router.replace("/");
+      }
+      const token = await SecureStore.getItemAsync("token");
+      const lowerCaseState = state.toLowerCase().trim();
+      if (!states[lowerCaseState]) {
+        return;
+      }
+      const response = await axios.post(
+        "http://localhost:5000/others/hospitals",
+        {
+          state: states[lowerCaseState],
+          zipCode: zipCode,
+        },
+        {
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = response.data.data;
+      setHospitals(data);
+      if (data.length > 0) {
+        ToastAndroid.show("Successfully retrieved hospitals", ToastAndroid.SHORT);
+        setState("");
+        setZipCode("");
+      } else {
+        ToastAndroid.show("No hospitals found", ToastAndroid.SHORT);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.screenContainer}>
+      <Stack.Screen
+        options={{
+          headerShadowVisible: false,
+          headerTitle: "",
+        }}
+      />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ justifyContent: "center", alignItems: "center" }}>
+        <TextInput
+          placeholder="State"
+          value={state}
+          onChangeText={setState}
+          style={styles.defaultInput}
+        />
+        <TextInput
+          placeholder="Zip Code"
+          value={zipCode}
+          onChangeText={setZipCode}
+          style={[
+            styles.defaultInput,
+            {
+              marginVertical: 12,
+            },
+          ]}
+        />
+        <TouchableOpacity style={styles.defaultBtn} onPress={attemptGetHospitals}>
+          <Text
+            style={{
+              fontSize: 18,
+            }}>
+            Search for Hospitals
+          </Text>
+        </TouchableOpacity>
+        <View style={[styles.hospitalContainer]}>
+          <ScrollView>
+            {hospitals.map((hospital, index) => {
+              return (
+                <View key={index} style={styles.resultContainer}>
+                  <Text style={{ fontSize: 18 }}>{hospital.name}</Text>
+                  <Text style={{ fontSize: 16 }}>{hospital.street_address}</Text>
+                  <Text style={{ fontSize: 16 }}>
+                    {hospital.zip_code} {hospital.city}, {hospital.state}
+                  </Text>
                 </View>
-            </ScrollView>
-        </SafeAreaView>
-    );
+              );
+            })}
+          </ScrollView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
 };
 
 export default Hospitals;
