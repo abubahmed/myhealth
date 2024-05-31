@@ -20,7 +20,7 @@ const usersRouter = require("./routes/users.route.js");
 app.use("/users", usersRouter);
 
 const apiRouter = require("./routes/api.route.js");
-app.use("/others", apiRouter);
+app.use("/api", apiRouter);
 
 const appointmentsRouter = require("./routes/appointments.route.js");
 app.use("/appointments", appointmentsRouter);

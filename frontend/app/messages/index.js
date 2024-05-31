@@ -16,6 +16,7 @@ import styles from "../../styles/styles";
 import checkTokenExpiration from "../../util/checkToken";
 import { useRouter } from "expo-router";
 const screenHeight = Dimensions.get("window").height;
+import { PUBLIC_BACKEND_URL, LOCAL_BACKEND_URL } from "@env";
 
 const Messages = () => {
   const router = useRouter();
@@ -24,11 +25,15 @@ const Messages = () => {
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
   const [receiver, setReceiver] = useState("");
+  const [loading, setLoading] = useState(false);
+  const backendUrl =
+    PUBLIC_BACKEND_URL || LOCAL_BACKEND_URL || "http://localhost:5000";
 
   useEffect(() => {
     const checkToken = async () => {
       const tokenValid = await checkTokenExpiration();
       if (!tokenValid) {
+        setLoading(false);
         router.replace("/");
       }
     };
@@ -36,13 +41,16 @@ const Messages = () => {
   }, []);
 
   const getMessages = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       const tokenValid = await checkTokenExpiration();
       if (!tokenValid) {
+        setLoading(false);
         router.replace("/");
       }
       const token = await SecureStore.getItemAsync("token");
-      const response = await axios.get("http://localhost:5000/messages/get", {
+      const response = await axios.get(`${backendUrl}/messages/get`, {
         headers: {
           "Content-type": "application/json; charset=UTF-8",
           Authorization: `Bearer ${token}`,
@@ -50,24 +58,31 @@ const Messages = () => {
       });
       const messages = response.data.data;
       setMessages(messages);
+      setLoading(false);
     } catch (error) {
       console.log(error);
+      ToastAndroid.show("Error getting messages", ToastAndroid.SHORT);
+      setLoading(false);
     }
   };
 
   const attemptMessageSend = async () => {
+    if (loading) return;
+    setLoading(true);
     if (!subject || !message || !receiver || !username) {
       ToastAndroid.show("Please fill in all fields", ToastAndroid.SHORT);
+      setLoading(false);
       return;
     }
     try {
       const tokenValid = await checkTokenExpiration();
       if (!tokenValid) {
+        setLoading(false);
         router.replace("/");
       }
       const token = await SecureStore.getItemAsync("token");
       const response = await axios.post(
-        "http://localhost:5000/messages/send",
+        `${backendUrl}/messages/send`,
         {
           subject: subject,
           receiver: receiver,
@@ -90,9 +105,11 @@ const Messages = () => {
         setMessage("");
         setReceiver("");
       }
+      setLoading(false);
     } catch (error) {
       console.log(error);
       ToastAndroid.show("Error sending message", ToastAndroid.SHORT);
+      setLoading(false);
     }
   };
 

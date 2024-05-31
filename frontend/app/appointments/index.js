@@ -16,6 +16,7 @@ import styles from "../../styles/styles";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import checkTokenExpiration from "../../util/checkToken";
 import { useRouter } from "expo-router";
+import { PUBLIC_BACKEND_URL, LOCAL_BACKEND_URL } from "@env";
 
 const Appointments = () => {
   const router = useRouter();
@@ -25,50 +26,64 @@ const Appointments = () => {
   const [timeSet, setTimeSet] = useState(false);
   const [appointments, setAppointments] = useState([]);
   const [doctor, setDoctor] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  const backendUrl =
+    PUBLIC_BACKEND_URL || LOCAL_BACKEND_URL || "http://localhost:5000";
   useEffect(() => {
     const checkToken = async () => {
       const tokenValid = await checkTokenExpiration();
       if (!tokenValid) {
+        setLoading(false);
         router.replace("/");
       }
     };
     checkToken();
   }, []);
 
-  const attemptGetAppointments = async (username) => {
+  const attemptGetAppointments = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       const tokenValid = await checkTokenExpiration();
       if (!tokenValid) {
+        setLoading(false);
         router.replace("/");
       }
       const token = await SecureStore.getItemAsync("token");
-      const response = await axios.get("http://localhost:5000/appointments/get", {
+      const response = await axios.get(`${backendUrl}/appointments/get`, {
         headers: {
           "Content-type": "application/json; charset=UTF-8",
           Authorization: `Bearer ${token}`,
         },
       });
       const appointments = response.data.data;
+      setLoading(false);
       setAppointments(appointments);
     } catch (error) {
       console.log(error);
+      ToastAndroid.show("Error fetching appointments", ToastAndroid.SHORT);
+      setLoading(false);
     }
   };
 
   const attemptAddAppointment = async ({ username, description, date, doctor }) => {
+    if (loading) return;
+    setLoading(true);
     if (!description || !date || !doctor || !username) {
       ToastAndroid.show("Please fill in all fields", ToastAndroid.SHORT);
+      setLoading(false);
       return;
     }
     try {
       const tokenValid = await checkTokenExpiration();
       if (!tokenValid) {
+        setLoading(false);
         router.replace("/");
       }
       const token = await SecureStore.getItemAsync("token");
       const response = await axios.post(
-        "http://localhost:5000/appointments/add",
+        `${backendUrl}/appointments/add`,
         {
           doctor: doctor,
           description: description,
@@ -83,6 +98,7 @@ const Appointments = () => {
       );
       const message = response.data.message;
       ToastAndroid.show(message, ToastAndroid.SHORT);
+      setLoading(false);
       if (message === "Appointment successfully created") {
         attemptGetAppointments(username);
         setAppointmentDesc("");
@@ -92,6 +108,7 @@ const Appointments = () => {
     } catch (error) {
       console.log(error);
       ToastAndroid.show("Error saving appointment", ToastAndroid.SHORT);
+      setLoading(false);
     }
   };
 

@@ -3,7 +3,7 @@ let Appointment = require("../models/appointment.model");
 let User = require("../models/user.model");
 const verifyToken = require("../util/verifyToken");
 
-router.route("/get").post(verifyToken, async (req, res) => {
+router.route("/get").get(verifyToken, async (req, res) => {
     let responseSent = false;
     const username = req.user?.username;
 

@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import styles from "../styles/styles";
+import { PUBLIC_BACKEND_URL, LOCAL_BACKEND_URL } from '@env'
 
 const Welcome = () => {
   const router = useRouter();
@@ -25,8 +26,11 @@ const Welcome = () => {
   const [signupUsername, setSignupUsername] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [reenterPassword, setReenterPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [type, setType] = useState("patient");
 
+  const backendUrl =
+    PUBLIC_BACKEND_URL || LOCAL_BACKEND_URL || "http://localhost:5000";
   async function save(key, value) {
     await SecureStore.setItemAsync(key, value);
   }
@@ -50,9 +54,16 @@ const Welcome = () => {
   }, [firstState]);
 
   const attemptSignup = async () => {
+    if (loading) return;
+    setLoading(true);
+    if (signupPassword !== reenterPassword) {
+      ToastAndroid.show("Passwords do not match", ToastAndroid.SHORT);
+      setLoading(false);
+      return;
+    }
     try {
       const response = await axios.post(
-        "http://localhost:5000/users/add",
+        `${backendUrl}/users/add`,
         {
           username: signupUsername,
           password: signupPassword,
@@ -78,19 +89,26 @@ const Welcome = () => {
         setLoginUsername("");
         setType("patient");
         save("token", data.token);
+        setLoading(false);
         router.push("/home");
       } else {
         ToastAndroid.show("Signup unsuccessful", ToastAndroid.SHORT);
+        setLoading(false);
       }
     } catch (error) {
       console.log(error);
+      setLoading(false);
     }
   };
 
   const attemptLogin = async () => {
+    console.log(backendUrl)
+    console.log(loading)
+    if (loading) return;
+    setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:5000/users/login",
+        `${backendUrl}/users/login`,
         {
           username: loginUsername,
           password: loginPassword,
@@ -116,12 +134,15 @@ const Welcome = () => {
         setReenterPassword("");
         setType("patient");
         save("token", data.token);
+        setLoading(false);
         router.push("/home");
       } else {
         ToastAndroid.show("Login unsuccessful", ToastAndroid.SHORT);
+        setLoading(false);
       }
     } catch (error) {
       console.log(error);
+      setLoading(false);
     }
   };
 
