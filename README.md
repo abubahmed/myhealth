@@ -1,4 +1,4 @@
-MERN stack mobile app for messaging workers, managing appointments, AI health evaluations, and finding hospitals. Built using React Native, Express.js, and MongoDB. 1st place project at Atomhacks X (40 teams, 150 competitors).
+MERN stack mobile healthcare app built using React Native, Express.js, and MongoDB. 1st place project at Atomhacks X (40 teams, 150 competitors).
 
 ![screenshot](frontend/assets/demo/Screenshot1.png)
 ![screenshot](frontend/assets/demo/Screenshot2.png)
